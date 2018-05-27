@@ -1,13 +1,17 @@
-package com.bartosz.lewandowski;
+package com.bartosz.lewandowski.models;
 
 public class Flag {
 
     private int xPos;
     private int yPos;
 
-    public Flag(){
+    Flag(){
         xPos = 0;
         yPos = 0;
+    }
+    public Flag(int x, int y){
+        xPos = x;
+        yPos = y;
     }
 
     public int getxPos() {
@@ -33,4 +37,5 @@ public class Flag {
                 ", yPos=" + yPos +
                 '}';
     }
+
 }

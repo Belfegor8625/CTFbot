@@ -1,6 +1,11 @@
-package com.bartosz.lewandowski;
+package com.bartosz.lewandowski.models;
 
-public class Player {
+import com.bartosz.lewandowski.ai.astar.models.Node;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Bot {
     private int id;
     private String name;
     private int xPos;
@@ -10,9 +15,9 @@ public class Player {
     private boolean isAlive;
     private int xBasePos;
     private int yBasePos;
-
-    public Player(){
-        id = 0;
+    private List<Node> fieldOfViewNodes;
+    public Bot(){
+        id = 17;
         name = "CTF Winner ;)";
         xPos = 0;
         yPos = 0;
@@ -21,6 +26,7 @@ public class Player {
         isAlive = true;
         xBasePos = 0;
         yBasePos = 0;
+        fieldOfViewNodes = new ArrayList<>();
     }
 
     public int getId() {
@@ -97,7 +103,7 @@ public class Player {
 
     @Override
     public String toString() {
-        return "Player{" +
+        return "Bot{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", xPos=" + xPos +
