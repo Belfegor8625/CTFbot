@@ -8,86 +8,107 @@ import com.bartosz.lewandowski.models.MapData;
 import java.util.*;
 
 import static com.bartosz.lewandowski.utils.Const.FIELD_OF_VIEW;
-import static com.bartosz.lewandowski.utils.Const.MAP_COLUMNS;
-import static com.bartosz.lewandowski.utils.Const.MAP_ROWS;
+
 
 public class BotsAI {
-
-
     //h scores is the stright-line distance from the current city to Bucharest
 
     private static void nodesMaker(List<Node> list, MapData map, Bot bot) {
         int centerXFOV = bot.getxPos();
         int centerYFOV = bot.getyPos();
-        int flagXPos = map.getFlag().getxPos();
-        int flagYPos = map.getFlag().getyPos();
+        int goalXPos;
+        int goalYPos;
+        if (bot.getHasFlag()) {
+            goalXPos = bot.getxBasePos();
+            goalYPos = bot.getyBasePos();
+        } else {
+            goalXPos = map.getFlag().getxPos();
+            goalYPos = map.getFlag().getyPos();
+        }
         for (int x = -FIELD_OF_VIEW; x <= FIELD_OF_VIEW; x++) {
             for (int y = -FIELD_OF_VIEW; y <= FIELD_OF_VIEW; y++) {
                 int rangeX = x + centerXFOV;
                 int rangeY = y + centerYFOV;
-                if (rangeX >= 0 && rangeX < MAP_COLUMNS && rangeY >= 0 && rangeY < MAP_ROWS) {
-                    double distance = Math.sqrt(Math.pow(flagXPos - rangeX, 2) + Math.pow(flagYPos - rangeY, 2));
-                    list.add(new Node(rangeX, rangeY, distance));
+                if (rangeX >= 0 && rangeX < map.getMap().size() && rangeY >= 0 && rangeY < map.getMap().size()) {
+                    double distance = Math.sqrt(Math.pow(goalXPos - rangeX, 2) + Math.pow(goalYPos - rangeY, 2));
+                    Node node = new Node(rangeX, rangeY, distance);
+                    if (bot.getHasFlag()) {
+                        for (int i = 0; i < list.size(); i++) {
+                            if (list.get(i).x == node.x && list.get(i).y == node.y)
+                                list.set(i, node);
+                        }
+                    } else {
+                        boolean nodeInList = list
+                                .stream()
+                                .anyMatch(n -> (n.x == node.x && n.y == node.y));
+                        if (!nodeInList) {
+                            list.add(node);
+                        }
+                    }
                 }
             }
         }
     }
 
 
-    private static void makeAdjacencies(int[][] map, List<Node> list) {
+    private static void makeAdjacencies(List<int[]> map, List<Node> list, Bot bot) {
+
+        double extraCost = 0.0;
+        if (bot.getHasFlag())
+            extraCost = 0.5;
 
         for (Node node : list) {
 
-            if (node.x - 1 > 0) {
+            if (node.x - 1 >= 0) {
                 Optional<Node> searchedNode = list
                         .stream()
                         .filter(n -> (n.x == node.x - 1 && n.y == node.y))
                         .findAny();
                 if (searchedNode.isPresent()) {
                     Node snode = searchedNode.get();
-                    Edge e = new Edge(snode, map[snode.y][snode.x]);
+                    Edge e = new Edge(snode, map.get(snode.y)[snode.x] + extraCost);
                     if (!node.adjacencies.contains(e)) {
                         node.adjacencies.add(e);
                     }
                 }
             }
 
-            if (node.y + 1 < MAP_ROWS) {
+            if (node.y + 1 < map.size()) {
                 Optional<Node> searchedNode = list
                         .stream()
                         .filter(n -> (n.x == node.x && n.y == node.y + 1))
                         .findAny();
                 if (searchedNode.isPresent()) {
                     Node snode = searchedNode.get();
-                    Edge e = new Edge(snode, map[snode.y][snode.x]);
+                    Edge e = new Edge(snode, map.get(snode.y)[snode.x] + extraCost);
                     if (!node.adjacencies.contains(e)) {
                         node.adjacencies.add(e);
                     }
                 }
             }
 
-            if (node.x + 1 < MAP_COLUMNS) {
+            if (node.x + 1 < map.size()) {
                 Optional<Node> searchedNode = list
                         .stream()
                         .filter(n -> (n.x == node.x + 1 && n.y == node.y))
                         .findAny();
                 if (searchedNode.isPresent()) {
                     Node snode = searchedNode.get();
-                    Edge e = new Edge(snode, map[snode.y][snode.x]);
+                    Edge e = new Edge(snode, map.get(snode.y)[snode.x] + extraCost);
                     if (!node.adjacencies.contains(e)) {
                         node.adjacencies.add(e);
                     }
                 }
             }
 
-            if (node.y - 1 < MAP_ROWS && node.y - 1 > 0) {
+            if (node.y - 1 < map.size() && node.y - 1 >= 0) {
                 Optional<Node> searchedNode = list
                         .stream()
                         .filter(n -> (n.x == node.x && n.y == node.y - 1))
                         .findAny();
                 if (searchedNode.isPresent()) {
                     Node snode = searchedNode.get();
-                    Edge e = new Edge(snode, map[snode.y][snode.x]);
+                    Edge e = new Edge(snode, map.get(snode.y)[snode.x] + extraCost);
                     if (!node.adjacencies.contains(e)) {
                         node.adjacencies.add(e);
                     }
@@ -110,6 +131,18 @@ public class BotsAI {
         return list.get(0);
     }
 
+    public static void clearNodesParents(List<Node> list) {
+        for (int i = 0; i < list.size(); i++) {
+            list.get(i).parent = null;
+        }
+    }
+
+    public static void clearAdjacencies(List<Node> list) {
+        for (Node n : list) {
+            n.adjacencies.clear();
+        }
+    }
+
     public static List<Node> getPath(Node target) {
         List<Node> path = new ArrayList<>();
 
@@ -122,14 +155,14 @@ public class BotsAI {
         return path;
     }
 
-    public static void AstarSearch(List<Node> list, Bot bot, MapData map) {
+    public static Node AstarSearch(List<Node> list, Bot bot, MapData map) {
 
         nodesMaker(list, map, bot);
-        makeAdjacencies(map.getMap(), list);
+        makeAdjacencies(map.getMap(), list, bot);
         Node source = getSourceNodeFromBotPos(list, bot);
         Node goal = findClosestNodeToGoal(list);
         Set<Node> explored = new HashSet<>();
-        PriorityQueue<Node> queue = new PriorityQueue<>(25,
+        PriorityQueue<Node> queue = new PriorityQueue<>(100,
                 (i, j) -> {
                     if (i.f_scores > j.f_scores) {
                         return 1;
@@ -177,6 +210,7 @@ public class BotsAI {
             }
         }
         System.out.println(getPath(goal));
+        return goal;
     }
 }
 

@@ -1,26 +1,24 @@
 package com.bartosz.lewandowski.models;
 
 
-import java.util.Arrays;
-
-import static com.bartosz.lewandowski.utils.Const.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MapData {
 
-
-    private int[][] map;
+    private List<int[]> map;
     private Flag flag;
 
     public MapData() {
         flag = new Flag();
-        map = new int[MAP_ROWS][MAP_COLUMNS];
+        map = new ArrayList<>();
     }
 
-    public int[][] getMap() {
+    public List<int[]> getMap() {
         return map;
     }
 
-    public void setMap(int[][] map) {
+    public void setMap(List<int[]> map) {
         this.map = map;
     }
 
@@ -33,9 +31,10 @@ public class MapData {
     }
 
     public void printMap() {
+        System.out.println();
         for (int[] aMap : map) {
             for (int anAMap : aMap) {
-                System.out.print(anAMap);
+                System.out.print(anAMap+"\t");
             }
             System.out.println();
         }
@@ -44,7 +43,7 @@ public class MapData {
     @Override
     public String toString() {
         return "MapData{" +
-                "map=" + Arrays.toString(map) +
+                "map=" + map +
                 ", flag=" + flag +
                 '}';
     }

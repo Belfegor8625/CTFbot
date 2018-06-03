@@ -1,6 +1,7 @@
 package com.bartosz.lewandowski.comm;
 
 import com.bartosz.lewandowski.ai.BotsAI;
+import com.bartosz.lewandowski.ai.astar.models.Edge;
 import com.bartosz.lewandowski.ai.astar.models.Node;
 import com.bartosz.lewandowski.models.Bot;
 import com.bartosz.lewandowski.models.MapData;
@@ -32,7 +33,6 @@ public class Communication {
         final MapData map = new MapData();
         final Bot bot = new Bot();
         final List<Node> nodeList = new ArrayList<>();
-        final boolean[] firstMessage = {true};
         try {
             setWebsocket(new WebSocketFactory()
                     .createSocket("ws://localhost:8000/")
@@ -46,21 +46,23 @@ public class Communication {
 
                             switch (type) {
                                 case "MoveRequest":
-                                    if (firstMessage[0]) {
-                                        JsonDataRetriever.getJsonMapData(map, jsonData);
-                                        JsonDataRetriever.getJsonFlagData(map, gson, jsonData);
-                                        BotsAI.AstarSearch(nodeList, bot, map);
-                                        firstMessage[0] = false;
-                                    } else {
-                                        System.out.println("move request");
-                                        sendMove(Const.Move.LEFT);
-                                    }
+                                    JsonDataRetriever.getJsonBotHasFlag(bot,jsonData);
+                                    JsonDataRetriever.getJsonMapData(map, jsonData);
+                                    JsonDataRetriever.getJsonFlagData(map, gson, jsonData);
+                                    JsonDataRetriever.getJsonBotPos(bot, jsonData);
+                                    JsonDataRetriever.getJsonBotMovesLeft(bot, jsonData);
+                                    chooseMove(BotsAI.getPath(BotsAI.AstarSearch(nodeList, bot, map)),bot);
+                                    BotsAI.clearNodesParents(nodeList);
+                                    BotsAI.clearAdjacencies(nodeList);
                                     break;
                                 case "ResponseOK":
                                     System.out.println("ok");
                                     break;
                                 case "Connected":
                                     JsonDataRetriever.getJsonBotId(bot, jsonData);
+                                    JsonDataRetriever.getJsonBotPos(bot, jsonData);
+                                    JsonDataRetriever.getJsonBasePos(bot, jsonData);
+                                    JsonDataRetriever.getJsonBotMovesLeft(bot, jsonData);
                                     break;
                                 default:
                                     System.err.println("błąd");
@@ -82,10 +84,27 @@ public class Communication {
                 "}");
     }
 
-//    public void chooseMove(){
-//        if ()
-//        sendMove();
-//    }
+    private void chooseMove(List<Node> path, Bot bot) {
+        Node currPos = path.get(0);
+        Node nextMove = path.get(1);
+        for (Edge e : currPos.adjacencies) {
+            if (e.target == nextMove) {
+                if (e.cost > bot.getMovesLeft()) {
+                    sendMove(Const.Move.NO_MOVE);
+                } else {
+                    if (nextMove.x == currPos.x + 1)
+                        sendMove(Const.Move.RIGHT);
+                    else if (nextMove.x == currPos.x - 1)
+                        sendMove(Const.Move.LEFT);
+                    else if (nextMove.y == currPos.y + 1)
+                        sendMove(Const.Move.DOWN);
+                    else if (nextMove.y == currPos.y - 1)
+                        sendMove(Const.Move.UP);
+                }
+                break;
+            }
+        }
+    }
 
     private static void sendMove(Const.Move move) {
         getWebsocket().sendText("{\n" +
@@ -93,6 +112,7 @@ public class Communication {
                 "  \"playerId\":0,\n" +
                 "  \"move\":\"" + move + "\"\n" +
                 "}");
+        System.out.println(move);
     }
 
     public static void disconnect() {

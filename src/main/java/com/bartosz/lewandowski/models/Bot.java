@@ -69,7 +69,7 @@ public class Bot {
         this.movesLeft = movesLeft;
     }
 
-    public boolean isHasFlag() {
+    public boolean getHasFlag() {
         return hasFlag;
     }
 
