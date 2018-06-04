@@ -46,12 +46,14 @@ public class Communication {
 
                             switch (type) {
                                 case "MoveRequest":
-                                    JsonDataRetriever.getJsonBotHasFlag(bot,jsonData);
+                                    JsonDataRetriever.getJsonBotHasFlag(bot, jsonData);
+                                    JsonDataRetriever.getJsonBasePos(bot, jsonData);
                                     JsonDataRetriever.getJsonMapData(map, jsonData);
                                     JsonDataRetriever.getJsonFlagData(map, gson, jsonData);
                                     JsonDataRetriever.getJsonBotPos(bot, jsonData);
                                     JsonDataRetriever.getJsonBotMovesLeft(bot, jsonData);
-                                    chooseMove(BotsAI.getPath(BotsAI.AstarSearch(nodeList, bot, map)),bot);
+                                    nodeList.clear();
+                                    chooseMove(BotsAI.getPath(BotsAI.AstarSearch(nodeList, bot, map)), bot);
                                     BotsAI.clearNodesParents(nodeList);
                                     BotsAI.clearAdjacencies(nodeList);
                                     break;
@@ -60,9 +62,10 @@ public class Communication {
                                     break;
                                 case "Connected":
                                     JsonDataRetriever.getJsonBotId(bot, jsonData);
-                                    JsonDataRetriever.getJsonBotPos(bot, jsonData);
-                                    JsonDataRetriever.getJsonBasePos(bot, jsonData);
-                                    JsonDataRetriever.getJsonBotMovesLeft(bot, jsonData);
+                                    break;
+                                case "GameOver":
+                                    JsonDataRetriever.checkIfWinner(bot,jsonData);
+                                    disconnect();
                                     break;
                                 default:
                                     System.err.println("błąd");
@@ -77,10 +80,10 @@ public class Communication {
         }
     }
 
-    public void sendConnectionRequest() {
+    public void sendConnectionRequest(String botName) {
         getWebsocket().sendText("{\n" +
                 "  \"type\":\"Connect\",\n" +
-                "  \"name\":\"CTF Winner\"\n" +
+                "  \"name\":\"" + botName + "\"\n" +
                 "}");
     }
 
@@ -90,26 +93,26 @@ public class Communication {
         for (Edge e : currPos.adjacencies) {
             if (e.target == nextMove) {
                 if (e.cost > bot.getMovesLeft()) {
-                    sendMove(Const.Move.NO_MOVE);
+                    sendMove(Const.Move.NO_MOVE, bot.getId());
                 } else {
                     if (nextMove.x == currPos.x + 1)
-                        sendMove(Const.Move.RIGHT);
+                        sendMove(Const.Move.RIGHT, bot.getId());
                     else if (nextMove.x == currPos.x - 1)
-                        sendMove(Const.Move.LEFT);
+                        sendMove(Const.Move.LEFT, bot.getId());
                     else if (nextMove.y == currPos.y + 1)
-                        sendMove(Const.Move.DOWN);
+                        sendMove(Const.Move.DOWN, bot.getId());
                     else if (nextMove.y == currPos.y - 1)
-                        sendMove(Const.Move.UP);
+                        sendMove(Const.Move.UP, bot.getId());
                 }
                 break;
             }
         }
     }
 
-    private static void sendMove(Const.Move move) {
+    private static void sendMove(Const.Move move, int id) {
         getWebsocket().sendText("{\n" +
                 "  \"type\":\"Move\",\n" +
-                "  \"playerId\":0,\n" +
+                "  \"playerId\":" + id + ",\n" +
                 "  \"move\":\"" + move + "\"\n" +
                 "}");
         System.out.println(move);

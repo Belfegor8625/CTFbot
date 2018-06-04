@@ -6,7 +6,6 @@ import com.bartosz.lewandowski.models.Flag;
 import com.bartosz.lewandowski.models.MapData;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
@@ -51,12 +50,12 @@ public class JsonDataRetriever {
         bot.setId(jsonData.get("playerId").getAsInt());
     }
 
-    public static void getJsonBotHasFlag(Bot bot, JsonObject jsonData){
+    public static void getJsonBotHasFlag(Bot bot, JsonObject jsonData) {
         JsonArray botsData = jsonData.get("players").getAsJsonArray();
         for (int i = 0; i < botsData.size(); i++) {
             JsonObject botData = botsData.get(i).getAsJsonObject();
             int curr_id = botData.get("id").getAsInt();
-            if (curr_id == bot.getId()){
+            if (curr_id == bot.getId()) {
                 bot.setHasFlag(botData.get("hasFlag").getAsBoolean());
                 break;
             }
@@ -68,7 +67,7 @@ public class JsonDataRetriever {
         for (int i = 0; i < botsData.size(); i++) {
             JsonObject botData = botsData.get(i).getAsJsonObject();
             int curr_id = botData.get("id").getAsInt();
-            if (curr_id == bot.getId()){
+            if (curr_id == bot.getId()) {
                 bot.setxPos(botData.get("x").getAsInt());
                 bot.setyPos(botData.get("y").getAsInt());
                 break;
@@ -81,7 +80,7 @@ public class JsonDataRetriever {
         for (int i = 0; i < botsData.size(); i++) {
             JsonObject botData = botsData.get(i).getAsJsonObject();
             int curr_id = botData.get("id").getAsInt();
-            if (curr_id == bot.getId()){
+            if (curr_id == bot.getId()) {
                 JsonObject jsonBasePos = botData.get("basePosition").getAsJsonObject();
                 bot.setxBasePos(jsonBasePos.get("x").getAsInt());
                 bot.setyBasePos(jsonBasePos.get("y").getAsInt());
@@ -90,15 +89,25 @@ public class JsonDataRetriever {
         }
     }
 
-    public static void getJsonBotMovesLeft(Bot bot, JsonObject jsonData){
+    public static void getJsonBotMovesLeft(Bot bot, JsonObject jsonData) {
         JsonArray botsData = jsonData.get("players").getAsJsonArray();
         for (int i = 0; i < botsData.size(); i++) {
             JsonObject botData = botsData.get(i).getAsJsonObject();
             int curr_id = botData.get("id").getAsInt();
-            if (curr_id == bot.getId()){
+            if (curr_id == bot.getId()) {
                 bot.setMovesLeft(botData.get("movesLeft").getAsInt());
                 break;
             }
+        }
+    }
+
+    public static void checkIfWinner(Bot bot, JsonObject jsonData) {
+        JsonObject winnerData = jsonData.get("winner").getAsJsonObject();
+        int winner_id = winnerData.get("id").getAsInt();
+        if (winner_id == bot.getId()) {
+            System.out.println("WINNER!!!");
+        }else{
+            System.out.println("LOOSER :(");
         }
     }
 }

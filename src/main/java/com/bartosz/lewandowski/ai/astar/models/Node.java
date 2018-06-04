@@ -8,7 +8,7 @@ public class Node implements Comparable<Node> {
     public final int x;
     public final int y;
     public double g_scores;
-    public final double h_scores;
+    public double h_scores;
     public double f_scores;
     public List<Edge> adjacencies;
     public Node parent;

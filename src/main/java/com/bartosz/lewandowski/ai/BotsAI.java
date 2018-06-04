@@ -33,9 +33,16 @@ public class BotsAI {
                     double distance = Math.sqrt(Math.pow(goalXPos - rangeX, 2) + Math.pow(goalYPos - rangeY, 2));
                     Node node = new Node(rangeX, rangeY, distance);
                     if (bot.getHasFlag()) {
-                        for (int i = 0; i < list.size(); i++) {
-                            if (list.get(i).x == node.x && list.get(i).y == node.y)
-                                list.set(i, node);
+                        boolean nodeInList = list
+                                .stream()
+                                .anyMatch(n -> (n.x == node.x && n.y == node.y));
+                        if (!nodeInList) {
+                            list.add(node);
+                        } else {
+                            for (int i = 0; i < list.size(); i++) {
+                                if (list.get(i).x == node.x && list.get(i).y == node.y)
+                                    list.set(i, node);
+                            }
                         }
                     } else {
                         boolean nodeInList = list
@@ -43,6 +50,11 @@ public class BotsAI {
                                 .anyMatch(n -> (n.x == node.x && n.y == node.y));
                         if (!nodeInList) {
                             list.add(node);
+                        } else {
+                            for (int i = 0; i < list.size(); i++) {
+                                if (list.get(i).x == node.x && list.get(i).y == node.y)
+                                    list.set(i, node);
+                            }
                         }
                     }
                 }
@@ -50,12 +62,11 @@ public class BotsAI {
         }
     }
 
-
     private static void makeAdjacencies(List<int[]> map, List<Node> list, Bot bot) {
 
-        double extraCost = 0.0;
+        int extraCost = 0;
         if (bot.getHasFlag())
-            extraCost = 0.5;
+            extraCost = 1;
 
         for (Node node : list) {
 
